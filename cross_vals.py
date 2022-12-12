@@ -3,12 +3,13 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, jaccard_score, f1_score
 
 #Implementing cross validation
-def perform_cross_validation(num_folds, df):
+def perform_cross_validation(num_folds, df, response_var):
     kf = KFold(n_splits=num_folds, random_state=None)
     model = LogisticRegression(solver= 'liblinear')
 
-    X = df.iloc[:,:-1]
-    y = df.iloc[:,-1]
+    # X is all predictor variables, y is response variable
+    X = df.drop(response_var, axis=1)
+    y = df[response_var]
 
     acc_score = []
     jacc_score = []
@@ -30,7 +31,7 @@ def perform_cross_validation(num_folds, df):
     display_scores(acc_score, jacc_score, f1_score, num_folds)
 
 #Implementing Multiple Prediction Cross Validation
-def perform_MPCV(num_folds, df):
+def perform_MPCV(num_folds, df, response_var):
     kf = KFold(n_splits=num_folds, random_state=None)
     model = LogisticRegression(solver= 'liblinear')
 
@@ -38,8 +39,9 @@ def perform_MPCV(num_folds, df):
     jacc_score = []
     f1_scores = []
 
-    X = df.iloc[:,:-1]
-    y = df.iloc[:,-1]
+    # X is all predictor variables, y is response variable
+    X = df.drop(response_var, axis=1)
+    y = df[response_var]
 
     for test_index, train_index in kf.split(X):
         X_train, X_test = X.iloc[train_index,:],X.iloc[test_index,:]
