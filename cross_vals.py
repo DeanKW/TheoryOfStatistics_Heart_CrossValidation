@@ -24,19 +24,7 @@ def perform_cross_validation(num_folds, df):
         jacc_score.append(jacc)
         f1_scores.append(f1_sc)
 
-    avg_acc_score = sum(acc_score)/num_folds
-    avg_jacc_score = sum(jacc_score)/num_folds
-    avg_f1_score = sum(f1_scores)/num_folds
-
-    print('accuracy of each fold - {}'.format(acc_score))
-    print('Avg accuracy : {}'.format(avg_acc_score))
-    print()
-    print('Jaccard Score of each fold - {}'.format(jacc_score))
-    print('Avg Jaccard : {}'.format(avg_jacc_score))
-    print()
-    print('F1 Score of each fold - {}'.format(f1_scores))
-    print('Avg F1 Score : {}'.format(avg_f1_score))
-
+    display_scores(acc_score, jacc_score, f1_score, num_folds)
 
 #Implementing Multiple Prediction Cross Validation
 def perform_MPCV(num_folds, df):
@@ -61,15 +49,18 @@ def perform_MPCV(num_folds, df):
         jacc_score.append(jacc)
         f1_scores.append(f1_sc)
 
-    avg_acc_score = sum(acc_score)/num_folds
-    avg_jacc_score = sum(jacc_score)/num_folds
-    avg_f1_score = sum(f1_scores)/num_folds
+    display_scores(acc_score, jacc_score, f1_score, num_folds)
 
-    print('accuracy of each fold - {}'.format(acc_score))
+def display_scores(acc_score_list, jacc_score_list, f1_score_list, num_folds):
+    avg_acc_score = sum(acc_score_list)/num_folds
+    avg_jacc_score = sum(jacc_score_list)/num_folds
+    avg_f1_score = sum(f1_score_list)/num_folds
+
+    print('accuracy of each fold - {}'.format(acc_score_list))
     print('Avg accuracy : {}'.format(avg_acc_score))
     print()
-    print('Jaccard Score of each fold - {}'.format(jacc_score))
+    print('Jaccard Score of each fold - {}'.format(jacc_score_list))
     print('Avg Jaccard : {}'.format(avg_jacc_score))
     print()
-    print('F1 Score of each fold - {}'.format(f1_scores))
+    print('F1 Score of each fold - {}'.format(f1_score_list))
     print('Avg F1 Score : {}'.format(avg_f1_score))
