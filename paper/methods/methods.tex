@@ -176,7 +176,8 @@ The first thing we did was see what data types each column is and ensure there a
 \end{table}
 
 \subsection{Correlation}
-We now examine the correlation that each feature has with the presence of heart disease.  We expect the columns with correlations closer to \(1\) and \(-1\) to have the most impact in our classifier.  
+We now examine the correlation that each feature has with the presence of heart disease.  We expect the columns with correlations 
+closer to \(1\) and \(-1\) to have the most impact in our classifier.  
 \begin{table}[]
 	\centering
 	\begin{tabular}{@{}|l|l|@{}}
@@ -199,7 +200,7 @@ We now examine the correlation that each feature has with the presence of heart 
 	\caption{Feature correlation with heart disease}
 	\label{tab:correlation}
 \end{table}
-Thus, based on \ref{tab:correlation}, we expect that the most significant factors in our model will be:
+Thus, based on [\ref{tab:correlation}], we expect that the most significant factors in our model will be:
 \begin{itemize}
 	\item Chest pain type
 	\item Maximum heart rate achieved (thalach)
@@ -221,7 +222,35 @@ The factors unlikely to be significant are:
 	\item Resting electrocardiographic results
 \end{itemize}
 
-
+\subsection{VIF and Collinearity}
+In order to ensure there is no collinearity, we will calculate the variance inflation factor (VIF). If there were collinearity, 
+one or more predictor variables would be correlated.  If the model were trained on collinear data, this would lead to a worse 
+classifier that is less applicable to other data sets.  \citep{collinearity}.  To test for collinearity, we will calculate the 
+VIF and discount any variables with VIF over \(3\) \citep{psu_vif}.  All of our predictor variables have VIF below our threshold 
+of three and we see that there is very little correlation between variables.  As such, no predictor variables will be excluded on 
+this basis.  The VIF factor for each predictor variable is shown in (\ref{tab:VIF_fac}).
+\begin{table}[]
+	\centering
+	\begin{tabular}{@{}ll@{}}
+		\toprule
+		Feature  & VIF Factor \\ \midrule
+		Age      & 1.43       \\
+		Sex      & 1.16       \\
+		cp       & 1.29       \\
+		trestbps & 1.17       \\
+		chol     & 1.15       \\
+		fbs      & 1.09       \\
+		restecg  & 1.06       \\
+		thalach  & 1.62       \\
+		exang    & 1.42       \\
+		oldpeak  & 1.71       \\
+		slope    & 1.64       \\
+		ca       & 1.20       \\
+		thal     & 1.14       \\ \bottomrule
+	\end{tabular}
+	\caption{Variance Inflation Factor for predictor variables}
+	\label{tab:VIF_fac}
+\end{table}
 \bibliography{references}
 
 \end{document}
