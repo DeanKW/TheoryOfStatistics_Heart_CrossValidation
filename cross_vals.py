@@ -7,6 +7,9 @@ def perform_cross_validation(num_folds, df):
     kf = KFold(n_splits=num_folds, random_state=None)
     model = LogisticRegression(solver= 'liblinear')
 
+    X = df.iloc[:,:-1]
+    y = df.iloc[:,-1]
+
     acc_score = []
     jacc_score = []
     f1_scores = []
@@ -34,6 +37,9 @@ def perform_MPCV(num_folds, df):
     acc_score = []
     jacc_score = []
     f1_scores = []
+
+    X = df.iloc[:,:-1]
+    y = df.iloc[:,-1]
 
     for test_index, train_index in kf.split(X):
         X_train, X_test = X.iloc[train_index,:],X.iloc[test_index,:]
