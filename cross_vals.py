@@ -148,6 +148,10 @@ def iterate_cross_validation(num_folds, df, response_var, cross_val_type, num_it
         elif cross_val_type=='MPCV':
             acc, jacc, f1 = perform_MPCV(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
             disp_name = 'Multiple Predicting Cross Validation'
+        if cross_val_type=='LOO':
+            num_folds = len(df)
+            acc, jacc, f1 = perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
+            disp_name = 'Leave-One-Out Cross Validation'
         else:
             raise ValueError('cross_val_type must be either CV or MPCV')
 
