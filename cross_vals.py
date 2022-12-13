@@ -3,7 +3,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, jaccard_score, f1_score
 
 #Implementing cross validation
-def perform_cross_validation(num_folds, df, response_var, shuffle=False, verbose=False):
+def perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=False, verbose=False):
     kf = KFold(n_splits=num_folds, shuffle=shuffle, random_state=None)
     model = LogisticRegression(solver= 'liblinear')
 
@@ -85,7 +85,7 @@ def iterate_cross_validation(num_folds, df, response_var, cross_val_type, num_it
     f1_avgs = []
     for i in range(num_iter):
         if cross_val_type=='KFCV':
-            acc, jacc, f1 = perform_cross_validation(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
+            acc, jacc, f1 = perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
             disp_name = 'Traditional K-Fold Cross Validation'
         elif cross_val_type=='MPCV':
             acc, jacc, f1 = perform_MPCV(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
