@@ -4,6 +4,19 @@ from sklearn.metrics import accuracy_score, jaccard_score, f1_score
 
 #Implementing cross validation
 def perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=False, verbose=False):
+    """Performs a single K fold cross validation with a logistic regression classifier
+
+    Args:
+        num_folds: the number of folds to use, k = num_folds
+        df: Data containing response and predictor variables
+        response_var: The variable representing the classification
+        shuffle (bool): Whether or not to shuffle the data before making consecutive folds.  Defaults to False
+        verbose (bool): Should scores be printed.  Defaults to False
+
+    Returns:
+        tuple: (avg_acc, avg_jacc, avg_f1) - the average accuracy score, jaccard score, and F1 score
+
+    """
     kf = KFold(n_splits=num_folds, shuffle=shuffle, random_state=None)
     model = LogisticRegression(solver= 'liblinear')
 
@@ -34,6 +47,19 @@ def perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=False, 
 
 #Implementing Multiple Prediction Cross Validation
 def perform_MPCV(num_folds, df, response_var, shuffle=False, verbose=False):
+    """Performs a single Multiple Predicting cross validation with a logistic regression classifier
+
+    Args:
+        num_folds: the number of folds to use, k = num_folds
+        df: Data containing response and predictor variables
+        response_var: The variable representing the classification
+        shuffle (bool): Whether or not to shuffle the data before making consecutive folds.  Defaults to False
+        verbose (bool): Should scores be printed.  Defaults to False
+
+    Returns:
+        tuple: (avg_acc, avg_jacc, avg_f1) - the average accuracy score, jaccard score, and F1 score
+
+    """
     kf = KFold(n_splits=num_folds, shuffle=shuffle, random_state=None)
     model = LogisticRegression(solver= 'liblinear')
 
@@ -63,6 +89,19 @@ def perform_MPCV(num_folds, df, response_var, shuffle=False, verbose=False):
     return avg_acc, avg_jacc, avg_f1
 
 def calc_scores(acc_score_list, jacc_score_list, f1_score_list, num_folds, verbose=False):
+    """Given a list of each fold's scores, calculates the average
+
+    Args:
+        acc_score_list (list[float]): The list of accuracy scores
+        jacc_score_list (list[float]): The list of Jaccard scores
+        f1_score_list (list[float]): The list of F1 scores
+        num_folds (int): The number of folds used
+        verbose (bool): Should scores be printed
+
+    Returns:
+        tuple: (avg_acc, avg_jacc, avg_f1) - the average accuracy score, jaccard score, and F1 score
+
+    """
     avg_acc_score = sum(acc_score_list)/num_folds
     avg_jacc_score = sum(jacc_score_list)/num_folds
     avg_f1_score = sum(f1_score_list)/num_folds
@@ -80,6 +119,25 @@ def calc_scores(acc_score_list, jacc_score_list, f1_score_list, num_folds, verbo
     return avg_acc_score, avg_jacc_score, avg_f1_score
 
 def iterate_cross_validation(num_folds, df, response_var, cross_val_type, num_iter=100, verbose=False, shuffle=True):
+    """Performs multiple cross validations with a logistic regression classifier, type selectable
+
+    Args:
+        num_folds: the number of folds to use, k = num_folds
+        df: Data containing response and predictor variables
+        response_var: The variable representing the classification
+        cross_val_type: The type of cross validation to perform.  Options include:
+            * 'KFCV' - Traditional K-fold Cross Validation
+            * 'MPCV' - Multiple Predicting Cross Validation
+        num_iter  : The number of times to perform the cross validation.  Defaults to 100
+        verbose (bool): Should individual iteration scores be printed, used for debugging.  Defaults to False
+        shuffle (bool): Whether or not to shuffle the data before making consecutive folds.  Defaults to True
+            THIS SHOULD ALWAYS BE TRUE UNLESS DEBUGGING
+        
+
+    Returns:
+        tuple: (avg_acc, avg_jacc, avg_f1) - the average accuracy score, jaccard score, and F1 score
+
+    """
     acc_avgs = []
     jacc_avgs = []
     f1_avgs = []
