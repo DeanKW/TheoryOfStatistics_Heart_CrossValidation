@@ -1,0 +1,272 @@
+\documentclass[letter]{article}
+\usepackage[all]{xy}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+%\usepackage{eucal}
+%\usepackage{verbatim} %commenting package
+%\usepackage{graphicx} %pictures package
+%\usepackage{harvard}
+\usepackage[sort&compress]{natbib}
+\bibliographystyle{plainnat}
+\usepackage{array}
+\usepackage[T1]{fontenc}
+\usepackage{indentfirst}
+\usepackage{listings}
+%\usepackage[margin=1.25in]{geometry}
+%\bibliographystyle{agsm}
+\usepackage{booktabs}
+\defcitealias{yoonsuhmulpred}{Multiple predicting K -fold cross-validation for model selection}
+\def\code#1{\texttt{#1}}
+
+\title{Using Multiple Predicting Cross Validation to Predict Heart Disease\\
+\large Methodology}
+
+\author{Dean Weiss}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+\(K\)-fold cross validation is a method of model selection.  In \textit{Multiple Predicting K-fold Cross-Validation for Model Selection}, 
+a new method of cross-validation is presented that emphasizes model validation over model training.  They obtained more accurate models when 
+training using the Multiple Predicting K-fold Cross-Validation method when analyzing both simulated data sets and economic data.  While they 
+analyze both linear and higher dimension models, I will be examining only the linear case.  Rather than using simulated data, we will attempt
+to predict the presence of heart disease in a patient based on several health factors.  This results in a classification problem, which
+is not the case studied in \citet{yoonsuhmulpred}.
+\end{abstract}
+\section{The Heart Disease Dataset}
+The heart disease dataset \citep{heart_disease_dataset} contains 14 points of medical data for 1000 persons, one of which is the presence of heart disease.  The other attributes are age, sex, type of chest pain, resting blood pressure, serum cholesterol, whether or not fasting blood sugar > 120 mg/dl,
+resting electrocardiographic results, maximum heart rate achieved, the presence of exercise induced angina, ST-segment depression induced by exercise
+relative to rest, the slope of the peak exercise ST segment, the number of major vessels colored by flourosopy, and information about the blood disorder thalassemia.
+\section{Cross Validation}
+
+Cross validation is a method of statistical model creation and validation that splits the data one or more times, using part of the data for training and part of the data for validation.  Cross validation then selects one model that best matches the required criteria. \citep{Arlot_2010}  We can refer to the overall data set as the learning set, \(D_{\textrm{learn}}\) and the subsamples as \(D_{\textrm{train}}\) and \(D_{\textrm{test}}\).  The simplest and most-intuitive cross validation method is \textbf{single hold-out random subsampling}, where \(D_{\textrm{train}}\) is a random sample of \(D_{\textrm{learn}}\). \(k\)-fold random subsampling performs the single-hold out method \(k\) times, creating \(k\) pairs of \(D_{\textrm{train}, i}, D_{\textrm{test},i}\) for \(i=1,2,...,k\).  A model is trained and tested on each pair of \(D_i\).
+
+\textbf{k-fold cross validation} is similar to k-fold random subsampling, but divides \(D_{\textrm{learn}}\) into \(k\) disjoint subsets (folds) of approximately equal size.  One of the subsamples is used as testing (validation) data while the remaining \(k-1\) subsamples are used as training data.  This process is then repeated \(k\) times, each time using a different subset as the validation set and measuring performance. The average of the \(k\) performances metrics is the cross-validated performance.  \citep{Berrar_CrossValid}
+
+In traditional \(k\)-fold cross validation, since \(k-1\) folds are used for model construction and only \(1\) is used for model validation, model construction is emphasized more highly than model validation.  In \textit{Multiple Predicting k-fold Cross-Validation for Model Selection}, Jung proposes using \(k-1\) folds for model validation and only 1 fold for model construction, heavily emphasizing model validation.  
+\section{Multiple Predicting K-fold Cross-Validation}
+As in \(k\)-fold cross validation, \textbf{Multiple Predicting k-fold Cross Validation} (MPCV) divides \(D_{\textrm{learn}}\) into \(k\) folds.  However, the model is created using one fold of the data and validated with \(k-1\) folds.  We represent our linear model as:
+\begin{equation}
+	\textbf{Y}=\textbf{X}\beta + \epsilon
+\end{equation}
+where \(\textbf{Y} = (y_1, y_2, ..., y_n) \) is our response vector, \(\textbf{X}=(x_{i,j})\) is our regressor matrix and \(\epsilon = (\epsilon_1, \epsilon_2, ..., \epsilon_n)\) is a vector of \textit{iid} random errors with mean 0.
+
+Splitting the data into \(K\) folds results in \(n_k = n/K\) samples per fold, where \(n\) is the number of samples in \(D_{\textrm{learn}}\).  This forces us to modify our notation.  Let \(\textbf{Y}_k\) be the response vector in the \(k\)th fold.  Continuing Jung's notation, we use the subscript \(k\) to denote data containing the \(k\)th fold and \((-k)\) to denote data without the \(kth\) fold.
+
+For normal \(K\)-fold CV, where \(k-1\) fold is used to construct the model and one fold is used the validate, the mean squared prediction error (MSPE) is given as:
+\begin{equation}\label{eq:PE_CV}
+	\textrm{MSPE} = \frac{1}{n}\sum_{k=1}^K \big|\big| \textbf{Y}_k-\textbf{X}_{(-k),D}\hat \beta_{k, D}\big|\big|^2
+\end{equation}
+
+For \textit{MPCV}, where the model is constructed with one fold and validated with \(K-1\) folds, the prediction error when using the \(k\)th fold for model training is:
+\begin{equation}\label{eq:PE_MPCV}
+	PE(k,D) = \textbf{Y}_{(-k),D}-\textbf{X}_{(-k),D}\hat \beta_{k,D}
+\end{equation}
+where \(\textbf{Y}_{(-k),D}\) is the response vector without samples in the \(k\)th fold, \(\textbf{X}_{(-k),D}\) is the regressor matrix without samples in the \(k\)th fold, and \(\hat \beta_{k,D}\) is the least-squares estimate with variables from the \(k\)th fold.
+
+After constructing a model and calculating equation \ref{eq:PE_MPCV} for all \(k\), we have \(K-1\) predicted values of \((\hat{y}_{i,1},..., \hat{y}_{i,K-1})\)
+Define \(\hat{y}_{i,D}\) as the mean of these predicted values.  We will use \(\hat{y}_{i,D}\) as a final prediction value for \(y_i\).  Finally, our MSPE is:
+\begin{equation}\label{eq:MSPE_MPCV}
+	\frac{1}{n}\sum_{i=1}^{n}(y_i-\hat y_{i,D})^2
+\end{equation}
+Whichever model minimized [\ref{eq:MSPE_MPCV}] is selected.  (\citep{yoonsuhmulpred}) This process is summarized in the below algorithm.
+
+\section{MPCV Algorithm}
+\citep{yoonsuhmulpred} summarizes MPCV as:
+\begin{enumerate}
+	\item Randomly sample the data set, \(D\) into K folds of nearly equal size.
+	\item Construct a model from the \(k\)th fold, then calculate the prediction error for all samples not in the \(k\)th fold.
+	\item Repeat Step 2 for \(k=1, 2, ..., K\).  At the end, there are \(K-1\) prediction errors for each observation.
+	\item For each observation \(y_i, i=1,..,n\), set the average of the \(K-1\) prediction errors, \(\hat y_{i,D}\) as the final predicted value.
+	\item Select the model that minimizes the MSPE from equation \ref{eq:MSPE_MPCV}
+\end{enumerate}
+
+\section{Metrics}
+Since our goal is to classify each individual as either having heart disease or not having heart disease, we are unable to use equation \ref{eq:MSPE_MPCV}
+as a metric for model performance, as using the MSPE would require predicting numerical values.  As a result, we will be using several different metrics.
+
+\subsection{Jaccard Similarity Coefficient}
+The Jaccard similarity coefficient, which gauges the similarity of sample sets.  This is the cardinality of the intersection of two sets divided by the size of the union of the two sets.  That is, it is the ratio of the number of correctly predicted values to the number of samples.
+\begin{equation*}
+	J(A,B) = \frac{|A \cap B|}{|A \cup B|}
+\end{equation*}
+
+If \(Y\) are the actual values and \(\hat Y\) are the predicted values:
+\begin{equation}
+	J(Y, \hat Y) = \frac{|Y \cap \hat Y|}{|Y \cup \hat Y|}
+\end{equation}
+
+\subsection{F1 Score}
+We will also use the F1 score, which is based on two scores - precision and recall.  Precision is the ratio of true positives (or people correctly identified as having heart disease) to the total number of samples.  If \(TP\) represents the number of true positives and \(FP\) represents the number of false positives:
+\begin{equation}
+	\textrm{Precision} = \frac{TP}{TP + FP}
+\end{equation}
+Recall is the ratio of the true positives to the number of true positives + the number of False Negatives.  Let \(FN\) be the number of false negatives.
+\begin{equation}
+	\textrm{Recall} = \frac{TP}{TP+FN}
+\end{equation}
+Then, the F1 score is the harmonic mean of these two:
+\begin{equation}
+	F1=2 \left( \frac{\textrm{Precision} \cdot \textrm{Recall}}{\textrm{Precision} + \textrm{Recall}}\right)
+\end{equation}
+
+\section{The Model}
+Since we are performing a classification problem, we are unable to use either the simple linear regression or higher dimensional regression used in
+\citep{yoonsuhmulpred}.  Instead, we will use a logistic regression classifier.  Classification will be binary; a person either has heart disease or does not.  Further research must be done on logistic regression.
+
+It may be possible we can still do a linear regression to more closely match Jung's work, but the current focus is on classification.
+\section{Implementations}
+All code is being written in Python and utilizes several packages, most notably pandas and scikit\_learn.  For the K-fold cross validation, we will be using \code{sklearn.model\_selection.KFold} to split data between test and train.  In order to perform the MPCV, we are implementing it in python.  Since we are focusing on classification, rather than regression, we will use a Logistic Regression classifier, implemented in  \code{sklearn.linear\_model.LogisticRegression}.
+
+We have implemented our own K-fold Cross Validation, once again using \code{sklearn.model\_selection.KFold} and \code{sklearn.linear\_model.LogisticRegression}.  We have verified that we get the same result as had we used
+ \code{sklearn.linear\_model\_selection.cross\_val\_score}, however have opted to implement it in order to 
+ maintain a parallel structure
+with the Multiple Predicting Cross Validation implementation.
+
+Since Leave-One-Out is a special case of K-fold cross validation, for Leave-One-Out, we call our K-fold cross validation implementation with \(k=n\), where \(n\) is the length of the data \citep{Berrar_CrossValid}.
+
+Should I have time to do so, I will perform a Stratified K-Fold cross validation, which would preserves the percentage of the sample that has heart disease between folds.  This would be done using \code{sklearn.model\_selection.StratifiedKFold}.
+
+This could be taken one step further and I could perform a stratified MPCV, where the percentage of the sample that had heart disease is preserved between folds, but only one fold is used to train and \(K-1\) folds are used to test.  That would even be original research, how cool!
+
+\section{Exploratory Data Analysis}
+Prior to beginning the modeling, we have done basic examinations of the data in order to discover patterns in the data, find any anomalies, and devise a potential hypothesis.  We have split this into several parts - general describing of the data, correlation of each factor with the presence  of heart disease, and collinearity of the factors.
+\subsection{Columns}
+The dataset contains 13 columns, each described below:
+\begin{itemize}
+	\item \textbf{age} - Age
+	\item \textbf{sex} - Sex
+	\item \textbf{cp} - Chest Pain Type (4 values)
+	\item \textbf{trestbps} - Resting Blood Pressure
+	\item \textbf{chol} - Serum Cholesterol in mg/dl
+	\item \textbf{fbs} - Fasting blood sugar > 120 mg/dl
+	\item \textbf{restecg} - Resting electrocardiagraphic results (values 0,1,2)
+	\item \textbf{thalach} - Maximum heart rate achieved
+	\item \textbf{exang} - Exercise induced angina
+	\item \textbf{oldpeak} - ST depression induced by exercise relative to rest
+	\item \textbf{slope} - The slope of the peak exercise ST segment
+	\item \textbf{ca} - number of major vessels (0-3) colored by flourosopy
+	\item \textbf{thal} - Thalassemia: 0 = normal; 1 = fixed defect; 2 = reversible defect
+	\item \textbf{target} - Presence of Heart Disease
+\end{itemize}
+\subsection{Data Description}
+The first thing we did was see what data types each column is and ensure there are no missing value.  We then can get summary statistics for each column.  Additionally, we verified that the \textit{target} data, our response variable, was balanced \citep{elem_stat_learn_unsup}.
+\begin{table}[]
+	\begin{tabular}{@{}lllllllll@{}}
+		\toprule
+		& age    & sex   & cp    & trestbps & chol   & fbs   & restecg & thalach \\ \midrule
+		Count & 1025   & 1025  & 1025  & 1025     & 1025   & 1025  & 1025    & 1025    \\
+		Mean  & 54.434 & 0.696 & 0.942 & 131.611  & 246    & 0.149 & 0.530   & 149.114 \\
+		STD   & 9.072  & 0.460 & 1.030 & 17.517   & 51.593 & 0.357 & 0.528   & 23.006  \\
+		Min   & 29     & 0     & 0     & 94       & 126    & 0     & 0       & 71      \\
+		25\%  & 48     & 0     & 0     & 120      & 211    & 0     & 0       & 132     \\
+		50\%  & 56     & 1     & 1     & 130      & 240    & 0     & 1       & 152     \\
+		75\%  & 61     & 1     & 2     & 140      & 275    & 0     & 1       & 166     \\
+		max   & 77     & 1     & 3     & 200      & 564    & 1     & 2       & 202     \\ \bottomrule
+	\end{tabular}\\
+\\
+\begin{tabular}{@{}llllllll@{}}
+	\toprule
+	& exang & slope & oldpeak & slope  & ca    & thal  & target \\ \midrule
+	Count & 1025  & 1025  & 1025    & 1025   & 1025  & 1025  & 1025   \\
+	Mean  & 0.337 & 1.385 & 1.072   & 1.385  & 0.754 & 2.324 & 0.513  \\
+	STD   & 0.473 & 0.618 & 1.175   & 0.6178 & 1.031 & 0.621 & 0.5    \\
+	Min   & 0     & 0     & 0       & 0      & 0     & 0     & 0      \\
+	25\%  & 0     & 1     & 0       & 1      & 0     & 2     & 0      \\
+	50\%  & 0     & 1     & 0.8     & 1      & 0     & 2     & 1      \\
+	75\%  & 1     & 2     & 1.8     & 2      & 1     & 3     & 1      \\
+	max   & 1     & 2     & 6.2     & 2      & 4     & 3     & 1      \\ \bottomrule
+\end{tabular}
+\caption{Column Summaries}
+\label{tab:col_summary}
+\end{table}
+
+\subsection{Correlation}
+We now examine the correlation that each feature has with the presence of heart disease.  We expect the columns with correlations 
+closer to \(1\) and \(-1\) to have the most impact in our classifier.  
+\begin{table}[]
+	\centering
+	\begin{tabular}{@{}|l|l|@{}}
+		\toprule
+		& Correlation with Heart Disease \\ \midrule
+		Age                                                & -0.229                         \\
+		Sex                                                & -0.28                          \\
+		Chest Pain Type                                    & 0.435                          \\
+		Resting Blood Pressure                             & -0.139                         \\
+		Serum Cholesterol (mg/dl)                          & -0.1                           \\
+		Fasting blood sugar \textgreater 120 mg/dl         & -0.041                         \\
+		Resting electrocardiagraphic results               & 0.134                          \\
+		Maximum heart rate achieved                        & 0.423                          \\
+		Exercise Induced angina                            & -0.438                         \\
+		ST depression induced by exercise relative to rest & -0.438                         \\
+		Slope of the peak exercise ST segment              & 0.346                          \\
+		\# of major vesseles colored by flourosopy         & -0.382                         \\
+		Thalassemia                                        & -0.337                         \\ \bottomrule
+	\end{tabular}
+	\caption{Feature correlation with heart disease}
+	\label{tab:correlation}
+\end{table}
+Thus, based on [\ref{tab:correlation}], we expect that the most significant factors in our model will be:
+\begin{itemize}
+	\item Chest pain type
+	\item Maximum heart rate achieved (thalach)
+	\item Exercise induced angina (exang)
+	\item ST depression induced by exercise relative to rest (oldpeak)
+	\item Number of major vessels colored by flourosopy
+\end{itemize}
+The factors that we expect to have some effect:
+\begin{itemize}
+	\item Slope of the peak exercise ST segment
+	\item Thalassemia
+	\item Age
+	\item Sex
+\end{itemize}
+The factors unlikely to be significant are:
+\begin{itemize}
+	\item Resting blood pressure
+	\item Serum cholesterol
+	\item Resting electrocardiographic results
+\end{itemize}
+
+\subsection{VIF and Collinearity}
+In order to ensure there is no collinearity, we will calculate the variance inflation factor (VIF). If there were collinearity, 
+one or more predictor variables would be correlated.  If the model were trained on collinear data, this would lead to a worse 
+classifier that is less applicable to other data sets.  \citep{collinearity}.  To test for collinearity, we will calculate the 
+VIF and discount any variables with VIF over \(3\) \citep{psu_vif}.  All of our predictor variables have VIF below our threshold 
+of three and we see that there is very little correlation between variables.  As such, no predictor variables will be excluded on 
+this basis.  The VIF factor for each predictor variable is shown in (\ref{tab:VIF_fac}).
+\begin{table}[]
+	\centering
+	\begin{tabular}{@{}ll@{}}
+		\toprule
+		Feature  & VIF Factor \\ \midrule
+		Age      & 1.43       \\
+		Sex      & 1.16       \\
+		cp       & 1.29       \\
+		trestbps & 1.17       \\
+		chol     & 1.15       \\
+		fbs      & 1.09       \\
+		restecg  & 1.06       \\
+		thalach  & 1.62       \\
+		exang    & 1.42       \\
+		oldpeak  & 1.71       \\
+		slope    & 1.64       \\
+		ca       & 1.20       \\
+		thal     & 1.14       \\ \bottomrule
+	\end{tabular}
+	\caption{Variance Inflation Factor for predictor variables}
+	\label{tab:VIF_fac}
+\end{table}
+\section{Models}
+We take \textit{target} (Presence of Heart Disease) as our response variable and all other variables to be predictor variables.  As previously discussed, the low correlation between resting blood pressure, serum cholesterol, and resting electrocardiographic results make them poor candidates for inclusion in our model.  In performing our modeling, we will use three different sets of predictor variables:
+\begin{itemize}
+	\item \textbf{Highly Correlated} - Contains only the 5 predictor variables with largest correlations, chest pain type, maximum heart rate achieved, exercise induced angina, ST depression induced by exercise relative to rest, and the number of major vessled colored by flourosopy
+	\item \textbf{Medium Correlated} - In addition to the predictor variables included in the \textit{highly} correlated set, the \textit{medium} correlated set also includes the slope of the peak exercise ST segment, Thalassemia, Age, and Sex.
+	\item \textbf{All Predictor Variables} - This set of models will test all predictor variables, regardless of the correlation with the presence of heart disease.  This adds resting blood pressure, serum cholesterol, and resting electrocardiographic results to the \textit{medium} set of predictor variable.
+\end{itemize}
+
+Several of our predictor variables are categorical, notably \textit{sex} (Male/Female), \textit{chest pain type}(4 values), and \textit{resting electrocardiagraphic results} (3 values).  For each of these, when that data is included in the model, we have created dummy variables to represent each category  \citep{elem_stat_learn_unsup}.
+\bibliography{references}
+
+\end{document}
