@@ -1,6 +1,6 @@
 from sklearn.model_selection import KFold
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, jaccard_score, f1_score
+from sklearn.metrics import accuracy_score, jaccard_score, f1_score, roc_auc_score
 
 #Implementing cross validation
 def perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=False, verbose=False):
@@ -27,6 +27,7 @@ def perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=False, 
     acc_score = []
     jacc_score = []
     f1_scores = []
+    roc_auc_scores = []
 
     for train_index , test_index in kf.split(X):
         X_train, X_test = X.iloc[train_index,:],X.iloc[test_index,:]
@@ -42,12 +43,15 @@ def perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=False, 
         if len(y_test) > 1:
             jacc = jaccard_score(y_test, pred_values)
             f1_sc = f1_score(y_test, pred_values)
+            roc_auc = roc_auc_score(y_test, pred_values)
         
             jacc_score.append(jacc)
             f1_scores.append(f1_sc)
+            roc_auc_scores.append(roc_auc)
 
-    avg_acc, avg_jacc, avg_f1 = calc_scores(acc_score, jacc_score, f1_scores, num_folds, verbose)
-    return avg_acc, avg_jacc, avg_f1
+    avg_acc, avg_jacc, avg_f1, avg_roc_auc = calc_scores(acc_score, jacc_score, f1_scores, roc_auc_scores, 
+                                                         num_folds, verbose)
+    return avg_acc, avg_jacc, avg_f1, avg_roc_auc
 
 #Implementing Multiple Prediction Cross Validation
 def perform_MPCV(num_folds, df, response_var, shuffle=False, verbose=False):
@@ -70,6 +74,7 @@ def perform_MPCV(num_folds, df, response_var, shuffle=False, verbose=False):
     acc_score = []
     jacc_score = []
     f1_scores = []
+    roc_auc_scores = []
 
     # X is all predictor variables, y is response variable
     X = df.drop(response_var, axis=1)
@@ -84,15 +89,17 @@ def perform_MPCV(num_folds, df, response_var, shuffle=False, verbose=False):
         acc = accuracy_score(y_test, pred_values)
         jacc = jaccard_score(y_test, pred_values)
         f1_sc = f1_score(y_test, pred_values)
+        roc_auc = roc_auc_score(y_test, pred_values)
 
         acc_score.append(acc)
         jacc_score.append(jacc)
         f1_scores.append(f1_sc)
+        roc_auc_scores.append(roc_auc)
 
-    avg_acc, avg_jacc, avg_f1 = calc_scores(acc_score, jacc_score, f1_scores, num_folds, verbose)
-    return avg_acc, avg_jacc, avg_f1
+    avg_acc, avg_jacc, avg_f1, avg_roc_auc = calc_scores(acc_score, jacc_score, f1_scores, roc_auc_scores, num_folds, verbose)
+    return avg_acc, avg_jacc, avg_f1, avg_roc_auc
 
-def calc_scores(acc_score_list, jacc_score_list, f1_score_list, num_folds, verbose=False):
+def calc_scores(acc_score_list, jacc_score_list, f1_score_list, roc_auc_list, num_folds, verbose=False):
     """Given a list of each fold's scores, calculates the average
 
     Args:
@@ -109,6 +116,7 @@ def calc_scores(acc_score_list, jacc_score_list, f1_score_list, num_folds, verbo
     avg_acc_score = sum(acc_score_list)/num_folds
     avg_jacc_score = sum(jacc_score_list)/num_folds
     avg_f1_score = sum(f1_score_list)/num_folds
+    avg_roc_auc_score = sum(roc_auc_list)/num_folds
 
     if verbose:
         print('accuracy of each fold - {}'.format(acc_score_list))
@@ -119,8 +127,11 @@ def calc_scores(acc_score_list, jacc_score_list, f1_score_list, num_folds, verbo
         print()
         print('F1 Score of each fold - {}'.format(f1_score_list))
         print('Avg F1 Score : {}'.format(avg_f1_score))
+        print()
+        print('ROC AUC of each fold - {}'.format(roc_auc_list))
+        print('Avg ROC AUC : {}'.format(avg_roc_auc_score))
 
-    return avg_acc_score, avg_jacc_score, avg_f1_score
+    return avg_acc_score, avg_jacc_score, avg_f1_score, avg_roc_auc_score
 
 def iterate_cross_validation(num_folds, df, response_var, cross_val_type, num_iter=100, verbose=False, shuffle=True):
     """Performs multiple cross validations with a logistic regression classifier, type selectable
@@ -146,20 +157,22 @@ def iterate_cross_validation(num_folds, df, response_var, cross_val_type, num_it
     acc_avgs = []
     jacc_avgs = []
     f1_avgs = []
-
+    auc_avgs = []
+    if cross_val_type == 'LOO':
+        print('WARNING: LOO is not fully implemented.  Scoring incomplete')
     if cross_val_type=='LOO' and num_iter != 1:
         print('LOO is deterministic.  Setting num_iter to 1')
         num_iter=1
     for i in range(num_iter):
         if cross_val_type=='KFCV':
-            acc, jacc, f1 = perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
+            acc, jacc, f1, auc = perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
             disp_name = 'Traditional K-Fold Cross Validation'
         elif cross_val_type=='MPCV':
-            acc, jacc, f1 = perform_MPCV(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
+            acc, jacc, f1, auc = perform_MPCV(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
             disp_name = 'Multiple Predicting Cross Validation'
         elif cross_val_type=='LOO':
             num_folds = len(df)
-            acc, jacc, f1 = perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
+            acc, jacc, f1, auc = perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
             disp_name = 'Leave-One-Out Cross Validation'
         else:
             raise ValueError('cross_val_type must be either KFCV, LOO, or MPCV')
@@ -167,12 +180,15 @@ def iterate_cross_validation(num_folds, df, response_var, cross_val_type, num_it
         acc_avgs.append(acc)
         jacc_avgs.append(jacc)
         f1_avgs.append(f1)
+        auc_avgs.append(auc)
 
     mean_acc = sum(acc_avgs)/num_iter
     mean_jacc = sum(jacc_avgs)/num_iter
     mean_f1 = sum(f1_avgs)/num_iter
+    mean_auc = sum(auc_avgs)/num_iter
 
     print(f'**** {disp_name} ****')
-    print(f'Avg accuracy out of {num_iter}: {mean_acc}')
-    print(f'Avg jaccard score out of {num_iter}: {mean_jacc}')
-    print(f'Avg F1 score out of {num_iter}: {mean_f1}')
+    print(f'Avg accuracy out of {num_iter} iterations: {mean_acc}')
+    print(f'Avg jaccard score out of {num_iter} iterations: {mean_jacc}')
+    print(f'Avg F1 score out of {num_iter} iterations: {mean_f1}')
+    print(f'Avg ROC AUC out of {num_iter} iterations: {mean_auc}')
