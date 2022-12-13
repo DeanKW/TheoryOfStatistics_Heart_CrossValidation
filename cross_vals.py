@@ -3,8 +3,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, jaccard_score, f1_score
 
 #Implementing cross validation
-def perform_cross_validation(num_folds, df, response_var):
-    kf = KFold(n_splits=num_folds, random_state=None)
+def perform_cross_validation(num_folds, df, response_var, shuffle=False, verbose=False):
+    kf = KFold(n_splits=num_folds, shuffle=shuffle, random_state=None)
     model = LogisticRegression(solver= 'liblinear')
 
     # X is all predictor variables, y is response variable
@@ -28,12 +28,13 @@ def perform_cross_validation(num_folds, df, response_var):
         jacc_score.append(jacc)
         f1_scores.append(f1_sc)
 
-    avg_acc, avg_jacc, avg_f1 = display_scores(acc_score, jacc_score, f1_scores, num_folds)
+    avg_acc, avg_jacc, avg_f1 = calc_scores(acc_score, jacc_score, f1_scores, num_folds, verbose)
     return avg_acc, avg_jacc, avg_f1
 
+
 #Implementing Multiple Prediction Cross Validation
-def perform_MPCV(num_folds, df, response_var):
-    kf = KFold(n_splits=num_folds, random_state=None)
+def perform_MPCV(num_folds, df, response_var, shuffle=False, verbose=False):
+    kf = KFold(n_splits=num_folds, shuffle=shuffle, random_state=None)
     model = LogisticRegression(solver= 'liblinear')
 
     acc_score = []
@@ -58,21 +59,49 @@ def perform_MPCV(num_folds, df, response_var):
         jacc_score.append(jacc)
         f1_scores.append(f1_sc)
 
-    avg_acc, avg_jacc, avg_f1 = display_scores(acc_score, jacc_score, f1_scores, num_folds)
+    avg_acc, avg_jacc, avg_f1 = calc_scores(acc_score, jacc_score, f1_scores, num_folds, verbose)
     return avg_acc, avg_jacc, avg_f1
 
-def display_scores(acc_score_list, jacc_score_list, f1_score_list, num_folds):
+def calc_scores(acc_score_list, jacc_score_list, f1_score_list, num_folds, verbose=False):
     avg_acc_score = sum(acc_score_list)/num_folds
     avg_jacc_score = sum(jacc_score_list)/num_folds
     avg_f1_score = sum(f1_score_list)/num_folds
 
-    print('accuracy of each fold - {}'.format(acc_score_list))
-    print('Avg accuracy : {}'.format(avg_acc_score))
-    print()
-    print('Jaccard Score of each fold - {}'.format(jacc_score_list))
-    print('Avg Jaccard : {}'.format(avg_jacc_score))
-    print()
-    print('F1 Score of each fold - {}'.format(f1_score_list))
-    print('Avg F1 Score : {}'.format(avg_f1_score))
+    if verbose:
+        print('accuracy of each fold - {}'.format(acc_score_list))
+        print('Avg accuracy : {}'.format(avg_acc_score))
+        print()
+        print('Jaccard Score of each fold - {}'.format(jacc_score_list))
+        print('Avg Jaccard : {}'.format(avg_jacc_score))
+        print()
+        print('F1 Score of each fold - {}'.format(f1_score_list))
+        print('Avg F1 Score : {}'.format(avg_f1_score))
 
     return avg_acc_score, avg_jacc_score, avg_f1_score
+
+def iterate_cross_validation(num_folds, df, response_var, cross_val_type, num_iter=100, verbose=False, shuffle=True):
+    acc_avgs = []
+    jacc_avgs = []
+    f1_avgs = []
+    for i in range(num_iter):
+        if cross_val_type=='KFCV':
+            acc, jacc, f1 = perform_cross_validation(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
+            disp_name = 'Traditional K-Fold Cross Validation'
+        elif cross_val_type=='MPCV':
+            acc, jacc, f1 = perform_MPCV(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
+            disp_name = 'Multiple Predicting Cross Validation'
+        else:
+            raise ValueError('cross_val_type must be either CV or MPCV')
+
+        acc_avgs.append(acc)
+        jacc_avgs.append(jacc)
+        f1_avgs.append(f1)
+
+    mean_acc = sum(acc_avgs)/num_iter
+    mean_jacc = sum(jacc_avgs)/num_iter
+    mean_f1 = sum(f1_avgs)/num_iter
+
+    print(f'**** {disp_name} ****')
+    print(f'Avg accuracy out of {num_iter}: {mean_acc}')
+    print(f'Avg jaccard score out of {num_iter}: {mean_jacc}')
+    print(f'Avg F1 score out of {num_iter}: {mean_f1}')
