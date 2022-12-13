@@ -1,4 +1,4 @@
-from sklearn.model_selection import KFold 
+from sklearn.model_selection import KFold
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, jaccard_score, f1_score
 
@@ -35,15 +35,19 @@ def perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=False, 
         model.fit(X_train,y_train)
         pred_values = model.predict(X_test)
         acc = accuracy_score(y_test, pred_values)
-        jacc = jaccard_score(y_test, pred_values)
-        f1_sc = f1_score(y_test, pred_values)
         acc_score.append(acc)
-        jacc_score.append(jacc)
-        f1_scores.append(f1_sc)
+
+        # In LOO, only testing on one piece of data at a time, thus, jaccard score and f1 score
+        # are not defined
+        if len(y_test) > 1:
+            jacc = jaccard_score(y_test, pred_values)
+            f1_sc = f1_score(y_test, pred_values)
+        
+            jacc_score.append(jacc)
+            f1_scores.append(f1_sc)
 
     avg_acc, avg_jacc, avg_f1 = calc_scores(acc_score, jacc_score, f1_scores, num_folds, verbose)
     return avg_acc, avg_jacc, avg_f1
-
 
 #Implementing Multiple Prediction Cross Validation
 def perform_MPCV(num_folds, df, response_var, shuffle=False, verbose=False):
@@ -126,6 +130,7 @@ def iterate_cross_validation(num_folds, df, response_var, cross_val_type, num_it
         df: Data containing response and predictor variables
         response_var: The variable representing the classification
         cross_val_type: The type of cross validation to perform.  Options include:
+            * 'LOO' - Leave-one-out 
             * 'KFCV' - Traditional K-fold Cross Validation
             * 'MPCV' - Multiple Predicting Cross Validation
         num_iter  : The number of times to perform the cross validation.  Defaults to 100
@@ -141,6 +146,10 @@ def iterate_cross_validation(num_folds, df, response_var, cross_val_type, num_it
     acc_avgs = []
     jacc_avgs = []
     f1_avgs = []
+
+    if cross_val_type=='LOO' and num_iter != 1:
+        print('LOO is deterministic.  Setting num_iter to 1')
+        num_iter=1
     for i in range(num_iter):
         if cross_val_type=='KFCV':
             acc, jacc, f1 = perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
@@ -148,12 +157,12 @@ def iterate_cross_validation(num_folds, df, response_var, cross_val_type, num_it
         elif cross_val_type=='MPCV':
             acc, jacc, f1 = perform_MPCV(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
             disp_name = 'Multiple Predicting Cross Validation'
-        if cross_val_type=='LOO':
+        elif cross_val_type=='LOO':
             num_folds = len(df)
             acc, jacc, f1 = perform_k_fold_cross_validation(num_folds, df, response_var, shuffle=shuffle, verbose=verbose)
             disp_name = 'Leave-One-Out Cross Validation'
         else:
-            raise ValueError('cross_val_type must be either CV or MPCV')
+            raise ValueError('cross_val_type must be either KFCV, LOO, or MPCV')
 
         acc_avgs.append(acc)
         jacc_avgs.append(jacc)
